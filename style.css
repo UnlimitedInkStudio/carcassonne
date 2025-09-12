@@ -38,11 +38,13 @@ button{
 }
 
 .navbar ul li a :hover {
-    background-color: #c27e19;
+    background-color: #000000;
     color: #52fc03;
 }
 button{
     background-color: #f8bf6a;
+    color:white;
+     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 .content {
     margin-top: 60px;
@@ -60,7 +62,7 @@ body{
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     color:#000000;
     padding: 5%;
-    text-size-adjust: 50%;
+    text-size-adjust: 75%;
     background-color: rgb(255, 255, 255, 0.8);
 }
 .inicio{
@@ -85,7 +87,7 @@ body{
 }
 .crear p{
     text-align: center;
-    color: rgb(248, 155, 49);
+    color: rgb(0, 0, 0);
     font-size: 150%;
     text-shadow: rgb(129, 129, 129) 4px 4px 6px;
    
