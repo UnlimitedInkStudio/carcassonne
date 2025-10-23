@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Invitado</title>
+<style>
+  #opciones button { margin-right: 5px; margin-top: 5px; }
+  #juego button { margin: 2px; }
+</style>
+</head>
+<body>
+<div id="juego"></div>
+<div id="opciones"></div>
+
+<script>
+let losetas = 4;
+let jugador = 1;
+
+
+let N1=8, L1=0, V1=0;
+let N2=8, L2=0, V2=0;
+let N3=8, L3=0, V3=0;
+let N4=8, L4=0, V4=0;
+
+function turnoJugador() {
+    if(losetas <= 0){
+        alert("YA NO QUEDAN LOSETAS, se anunciarán los ganadores");
+        console.log("=== RESULTADOS FINALES ===");
+        RV1 = V1 * 2;
+        RT1 = RV1 + L1;
+         RV2 = V2 * 2;
+        RT2 = RV2 + L2;
+         RV3 = V3 * 2;
+        RT3 = RV3 + L3;
+         RV4 = V4 * 2;
+        RT4 = RV4 + L4;
+        console.log("Jugador1:", RT1, " Puntos ", "Jugador2:", RT2, " puntos ", "Jugador3:", RT3, " puntos ", "Jugador4:", RT4, " puntos");
+        alert("Jugador1: " + RT1 + " Puntos " + " Jugador2: " + RT2 + " puntos " + " Jugador3: " + RT3 + " puntos " + " Jugador4: " + RT4 + " puntos");
+        return;
+    }
+
+    alert(`Turno del jugador ${jugador}. Losetas restantes: ${losetas}`);
+    alert(`Jugador ${jugador}, haz click para colocar la loseta`);
+
+    
+    const juego = document.getElementById("juego");
+    juego.innerHTML = "";
+
+    document.addEventListener("click", function colocarLoseta(event){
+        document.removeEventListener("click", colocarLoseta); 
+        alert(`Jugador ${jugador} colocó una loseta`);
+        losetas--;
+
+        console.log(`Jugador ${jugador} colocó una loseta`); 
+
+        
+        let boton = document.createElement("button");
+        boton.innerText = `Loseta J${jugador}`;
+        juego.appendChild(boton);
+
+        
+        mostrarOpciones();
+    }, { once: true });
+}
+
+function mostrarOpciones(){
+    const cont = document.getElementById("opciones");
+    cont.innerHTML = ""; 
+    const btnLadron = document.createElement("button");
+    btnLadron.innerText = "Poner Ladrón";
+    btnLadron.onclick = function(ev){
+        ev.stopPropagation();
+        switch(jugador){
+            case 1: L1++; N1--; break;
+            case 2: L2++; N2--; break;
+            case 3: L3++; N3--; break;
+            case 4: L4++; N4--; break;
+        }
+        console.log(`Jugador ${jugador} colocó un Ladrón`); 
+        limpiarTurno();
+    };
+
+    const btnVago = document.createElement("button");
+    btnVago.innerText = "Poner Vago";
+    btnVago.onclick = function(ev){
+        ev.stopPropagation();
+        switch(jugador){
+            case 1: V1++; N1--; break;
+            case 2: V2++; N2--; break;
+            case 3: V3++; N3--; break;
+            case 4: V4++; N4--; break;
+        }
+        console.log(`Jugador ${jugador} colocó un Vago`); 
+        limpiarTurno();
+    };
+
+    const btnNada = document.createElement("button");
+    btnNada.innerText = "No poner nada";
+    btnNada.onclick = function(ev){
+        ev.stopPropagation();
+        console.log(`Jugador ${jugador} no colocó miple`); 
+        limpiarTurno();
+    };
+
+    cont.appendChild(btnLadron);
+    cont.appendChild(btnVago);
+    cont.appendChild(btnNada);
+}
+
+
+function limpiarTurno(){
+    document.getElementById("opciones").innerHTML = "";
+    document.getElementById("juego").innerHTML = ""; 
+    jugador++;
+    if(jugador > 4) jugador = 1;
+    turnoJugador();
+}
+
+
+turnoJugador();
+</script>
+</body>
+</html>
