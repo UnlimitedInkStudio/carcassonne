@@ -1,0 +1,12 @@
+body{
+    background-image: url(imagenes/cyber-3400789_1280.jpg);
+    background-size: cover;
+}
+h1{
+    text-align: center;
+    color: chartreuse;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-size: 100px;
+     text-size-adjust: 25%;
+     padding-top: 5%;
+}
