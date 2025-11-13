@@ -1,0 +1,154 @@
+.navbar{
+      position: sticky;
+        top: 0;
+         background-image: url(imagenes/Barra.png);
+         padding: 5px 0;
+           width: 100%;
+           z-index: 1;
+           background-size: cover;
+           background-repeat: no-repeat;
+           padding-top: 25px;
+}
+body{
+    cursor: url(imagenes/cursor.png), auto;
+}
+body :hover{
+    cursor: url(imagenes/cursor2.png), auto;
+}
+button{
+    height: 50px;
+    width: 90px;
+    font-size: large;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.navbar ul li {
+    display: inline-block;
+    margin: 0 20px;
+    padding-bottom: 2%;
+    
+}
+
+.navbar ul li a {
+    color: rgb(255, 255, 255);
+    text-decoration:aqua;
+    font-size: 18px;
+    padding: 10px 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.navbar ul li a :hover {
+    background-color: #000000;
+    color: #52fc03;
+}
+button{
+    background-color: #f8bf6a;
+    color:white;
+     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+.content {
+    margin-top: 60px;
+}
+.rules{
+    color: rgb(0, 26, 255);
+    text-align: center;
+    font-size: 50px;
+}
+body{
+    background-image: url(imagenes/Fondo.jpg);
+    background-size: cover;
+}
+.Reglas1{
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    color:#000000;
+    padding: 5%;
+    text-size-adjust: 75%;
+    background-color: rgb(255, 255, 255, 0.8);
+    font-size: 150%;
+}
+.inicio{
+    color:#48cf0a;
+    text-align: center;
+    font-size: 50px;
+     text-size-adjust: 25%;
+     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    
+}
+.sesion ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+.sesion ul li {
+    margin: 0 20px;
+}
+.sesion h2{
+    font-size: 40px;
+}
+.sesion {
+background-color: rgb(255, 255, 255, 0.5);
+}
+.crear p{
+    text-align: center;
+    color: rgb(0, 0, 0);
+    font-size: 150%;
+    text-shadow: rgb(129, 129, 129) 4px 4px 6px;
+   
+}
+.crear{
+  padding-left: 26%;
+}
+.bloque{
+    width: 60%;
+    max-width: 700px;
+    min-width: 260px;
+    height: 50%;
+    max-height: 500px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    align-items: center;
+    justify-content: center;
+}
+.play :hover {
+    background-color: #000000;
+    color: #52fc03;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.op ul li{
+    display: inline-block;
+    margin: 0 20px;
+    padding-bottom: 2%;
+}
+.op{
+      padding: 5px 0;
+           width: 100%;
+           z-index: 1;
+           background-size: cover;
+           background-repeat: no-repeat;
+         
+         padding-top: 25px;
+}
+.op ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+.op ul li a{
+     font-size: 18px;
+    padding: 10px 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+}
+.pata{
+    padding-top: 25%;
+}

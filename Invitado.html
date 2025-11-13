@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carcassonne</title>
+<style>
+  @keyframes valid{
+    0% {background-color: aqua;}
+    25%{background-color: white;}
+    50%{background-color: aqua;}
+    75%{background-color: white;}
+    100%{background-color: aqua;}
+  }
+  body { font-family: Arial; text-align: center; background: #f0f0f0; margin: 0; }
+  #contenedor { display: flex; flex-direction: column; align-items: center; position: relative; }
+  #tablero {
+    width: 900px; height: 900px;
+    display: grid;
+    grid-template-columns: repeat(15, 60px);
+    grid-template-rows: repeat(15, 60px);
+    gap: 1px;
+    background-color: #ccc;
+    border: 3px solid #333;
+    margin-top: 10px;
+  }
+  .celda { width: 60px; height: 60px; background: #fff; border: 1px solid #aaa; position: relative; }
+  .valida { animation: valid 5s infinite; }
+  .loseta { width: 60px; height: 60px; position: absolute; top: 0; left: 0; transform-origin: center center; }
+  .meeple { width: 30px; height: 30px; position: absolute; bottom: 5px; right: 5px; }
+  #barra-controles { position: sticky; bottom: 0; background: #222; padding: 10px; width: 100%; color: white; }
+  #barra-controles button { margin: 5px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+  #info { margin-top: 10px; font-weight: bold; }
+  #jugador-actual {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 120px;
+    height: 120px;
+    border: 3px solid #333;
+    border-radius: 10px;
+    background-color: #fff;
+  }
+</style>
+</head>
+<body>
+<div id="contenedor">
+  <h2>Carcassonne</h2>
+  <img id="jugador-actual" src="imagenes/personaje_rojo.png" alt="Jugador Actual">
+  <div id="tablero"></div>
+  <div id="info"></div>
+</div>
+
+<div id="barra-controles">
+  <button id="rotar">Rotar loseta</button>
+  <button id="confirmar">Confirmar colocación</button>
+</div>
+
+<script>
+let jugador = 1;
+let losetasRestantes = 72;
+let rotacion = 0;
+let losetaActual = null;
+let celdaSeleccionada = null;
+let tipoActual = null;
+let indiceActual = null;
+
+const tablero = document.getElementById("tablero");
+const info = document.getElementById("info");
+const imgJugadorActual = document.getElementById("jugador-actual");
+let celdas = [];
+let estadoTablero = Array(225).fill(null);
+
+let puntaje = [
+  {vagos: 0, ladrones: 0, caballeros: 0, paladines: 0, total: 0, diario: 0, ultimo: 0},
+  {vagos: 0, ladrones: 0, caballeros: 0, paladines: 0, total: 0, diario: 0, ultimo: 0},
+  {vagos: 0, ladrones: 0, caballeros: 0, paladines: 0, total: 0, diario: 0, ultimo: 0},
+  {vagos: 0, ladrones: 0, caballeros: 0, paladines: 0, total: 0, diario: 0, ultimo: 0}
+];
+
+window.jugador_rojo = 0;
+window.jugador_violeta = 0;
+window.jugador_verde = 0;
+window.jugador_amarillo = 0;
+
+function actualizarVariablesJugadoresPorColor(){
+  window.jugador_rojo = puntaje[0].total;
+  window.jugador_violeta = puntaje[1].total;
+  window.jugador_verde = puntaje[2].total;
+  window.jugador_amarillo = puntaje[3].total;
+}
+
+actualizarVariablesJugadoresPorColor();
+
+let puntajeDiarioHist = [[], [], [], []];
+const puntosPorMeeple = { vago: 3, ladron: 1, caballero: 4, paladin: 5 };
+
+let registros = [];
+
+for (let i = 0; i < 225; i++) {
+  const celda = document.createElement("div");
+  celda.classList.add("celda");
+  celda.dataset.ocupada = "false";
+  celda.addEventListener("dragover", e => e.preventDefault());
+  celda.addEventListener("drop", e => colocarTemporal(e, celda, i));
+  tablero.appendChild(celda);
+  celdas.push(celda);
+}
+
+const tiposLoseta = [
+  { nombre: "Camino Recto", imagen: "imagenes/camino_recto.png", caminos: [0,2], maxRot: 1 },
+  { nombre: "Camino Curva", imagen: "imagenes/camino_curva.png", caminos: [1,2], maxRot: 3 },
+  { nombre: "Camino Cruce", imagen: "imagenes/camino_cruce.png", caminos: [0,1,2,3], maxRot: 0 },
+  { nombre: "Ciudad Especial", imagen: "imagenes/ciudad_especial.png", caminos: [0,1,2,3], maxRot: 0 },
+  { nombre: "Iglesia", imagen: "imagenes/iglesia.png", caminos: [0,1,2,3], maxRot: 0 }
+];
+
+const centro = 7 * 15 + 7;
+colocarLosetaFija(centro, tiposLoseta[2], 0);
+turnoJugador();
+
+function actualizarImagenJugador() {
+  const colores = ["rojo", "violeta", "verde", "amarillo"];
+  imgJugadorActual.src = `imagenes/personaje_${colores[jugador - 1]}.png`;
+}
+
+function turnoJugador() {
+  if (losetasRestantes <= 0) { finalizarJuego(); return; }
+  actualizarImagenJugador();
+  alert(`Turno del jugador ${jugador}\nLosetas restantes: ${losetasRestantes}\nPuntos actuales: ${puntaje[jugador-1].total} pts`);
+  info.innerText = `Jugador ${jugador} | Losetas restantes: ${losetasRestantes} | Puntos: ${puntaje[jugador-1].total} pts`;
+  prepararNuevaLoseta();
+  marcarEspaciosValidos();
+}
+
+function prepararNuevaLoseta() {
+  if (losetaActual) losetaActual.remove();
+  let random = Math.random();
+  if (random < 0.07) {
+    tipoActual = tiposLoseta[4];
+  } else if (random < 0.22) {
+    tipoActual = tiposLoseta[3];
+  } else {
+    tipoActual = tiposLoseta[Math.floor(Math.random() * 3)];
+  }
+  losetaActual = document.createElement("img");
+  losetaActual.src = tipoActual.imagen;
+  losetaActual.classList.add("loseta");
+  losetaActual.draggable = true;
+  losetaActual.dataset.tipo = tipoActual.nombre;
+  losetaActual.style.position = "absolute";
+  losetaActual.style.left = "50%";
+  losetaActual.style.top = "90%";
+  losetaActual.style.transform = "translate(-50%, -50%) rotate(0deg)";
+  losetaActual.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", "loseta"); });
+  document.body.appendChild(losetaActual);
+  rotacion = 0;
+}
+
+function adyacentes(i) {
+  const cols = 15;
+  const arr = [];
+  if (i % cols !== 0) arr.push(i - 1);
+  if (i % cols !== cols - 1) arr.push(i + 1);
+  if (i - cols >= 0) arr.push(i - cols);
+  if (i + cols < 225) arr.push(i + cols);
+  return arr;
+}
+
+function obtenerDireccionesActivas(tipo, rot) {
+  switch (tipo.nombre) {
+    case "Camino Recto":
+      return rot % 180 === 0 ? [0,2] : [1,3];
+    case "Camino Curva":
+      if (rot === 0) return [1,2];
+      if (rot === 90) return [2,3];
+      if (rot === 180) return [3,0];
+      if (rot === 270) return [0,1];
+      return [];
+    case "Camino Cruce":
+    case "Ciudad Especial":
+    case "Iglesia":
+      return [0,1,2,3];
+    default:
+      return [];
+  }
+}
+
+function esColocacionValida(index) {
+  if (!tipoActual) return false;
+  if (tipoActual.nombre === "Camino Cruce") {
+    return celdas[index].dataset.ocupada === "false";
+  }
+  const cols = 15;
+  const ladosActivos = obtenerDireccionesActivas(tipoActual, rotacion);
+  const vecinos = [
+    { idx: index - 1, dir: 0 },
+    { idx: index + 1, dir: 1 },
+    { idx: index - cols, dir: 2 },
+    { idx: index + cols, dir: 3 }
+  ];
+  const dirOpuesta = [1, 0, 3, 2];
+  for (let v of vecinos) {
+    const vecinoIdx = v.idx;
+    const dir = v.dir;
+    if (vecinoIdx < 0 || vecinoIdx >= 225) continue;
+    if (dir === 0 && index % cols === 0) continue;
+    if (dir === 1 && index % cols === cols - 1) continue;
+    const vecinoData = estadoTablero[vecinoIdx];
+    if (!vecinoData) continue;
+    const vecinoLados = obtenerDireccionesActivas(vecinoData.tipo, vecinoData.rot);
+    const ladoTiene = ladosActivos.includes(dir);
+    const vecinoTiene = vecinoLados.includes(dirOpuesta[dir]);
+    if (ladoTiene && !vecinoTiene) return false;
+    if (!ladoTiene && vecinoTiene) return false;
+  }
+  return true;
+}
+
+function marcarEspaciosValidos() {
+  celdas.forEach(c => c.classList.remove("valida"));
+  if (!tipoActual) return;
+  celdas.forEach((c, i) => {
+    if (c.dataset.ocupada === "true") return;
+    const tieneVecino = adyacentes(i).some(a => estadoTablero[a]);
+    if (tieneVecino && esColocacionValida(i)) c.classList.add("valida");
+  });
+}
+
+function colocarLosetaFija(index, tipo, rot) {
+  const celda = celdas[index];
+  celda.dataset.ocupada = "true";
+  celda.classList.remove("valida");
+  celda.innerHTML = "";
+  const fija = document.createElement("img");
+  fija.src = tipo.imagen;
+  fija.classList.add("loseta");
+  fija.style.transform = `rotate(${rot}deg)`;
+  celda.appendChild(fija);
+  estadoTablero[index] = { tipo: tipo, rot };
+}
+
+function colocarTemporal(e, celda, index) {
+  e.preventDefault();
+  if (!celda.classList.contains("valida")) return;
+  if (celda.dataset.ocupada === "true") return;
+  if (!esColocacionValida(index)) {
+    alert("No se puede colocar aquí (los caminos no coinciden)");
+    return;
+  }
+  if (celdaSeleccionada && celdaSeleccionada !== celda) {
+    celdaSeleccionada.innerHTML = "";
+    celdaSeleccionada.classList.add("valida");
+  }
+  celdaSeleccionada = celda;
+  indiceActual = index;
+  celda.innerHTML = "";
+  celda.appendChild(losetaActual);
+  losetaActual.style.position = "relative";
+  losetaActual.style.left = "0";
+  losetaActual.style.top = "0";
+  losetaActual.style.transform = `rotate(${rotacion}deg)`;
+  losetaActual.draggable = false;
+  celda.classList.remove("valida");
+}
+
+document.getElementById("rotar").onclick = () => {
+  if (!losetaActual) return;
+  rotacion += 90;
+  if (rotacion >= 360) rotacion = 0;
+  losetaActual.style.transform = `rotate(${rotacion}deg)`;
+  marcarEspaciosValidos();
+};
+
+document.getElementById("confirmar").onclick = () => {
+  if (!celdaSeleccionada) {
+    alert("Coloca la loseta en una posición válida antes de confirmar.");
+    return;
+  }
+  colocarLosetaFija(indiceActual, tipoActual, rotacion);
+  losetaActual.remove();
+  losetaActual = null;
+  celdaSeleccionada = null;
+  losetasRestantes--;
+  mostrarOpcionesMeeple();
+};
+
+function mostrarOpcionesMeeple() {
+  const colores = ["rojo","violeta","verde","amarillo"];
+  const color = colores[jugador-1];
+  const barra = document.getElementById("barra-controles");
+  if (tipoActual.nombre === "Ciudad Especial") {
+    barra.innerHTML = `
+      <button id="btnCaballero">Caballero_${color}</button>
+      <button id="btnNada">Nada</button>`;
+    document.getElementById("btnCaballero").onclick = () => finTurno("caballero", color);
+    document.getElementById("btnNada").onclick = () => finTurno(null, null);
+  } else if (tipoActual.nombre === "Iglesia") {
+    barra.innerHTML = `
+      <button id="btnPaladin">Paladin_${color}</button>
+      <button id="btnNada">Nada</button>`;
+    document.getElementById("btnPaladin").onclick = () => finTurno("paladin", color);
+    document.getElementById("btnNada").onclick = () => finTurno(null, null);
+  } else {
+    barra.innerHTML = `
+      <button id="btnLadron">Ladron_${color}</button>
+      <button id="btnVago">Vago_${color}</button>
+      <button id="btnNada">Nada</button>`;
+    document.getElementById("btnLadron").onclick = () => finTurno("ladron", color);
+    document.getElementById("btnVago").onclick = () => finTurno("vago", color);
+    document.getElementById("btnNada").onclick = () => finTurno(null, null);
+  }
+}
+
+function finTurno(tipoMeeple, color) {
+  const registro = {jugador, loseta: tipoActual.nombre, meeple: tipoMeeple || "ninguno"};
+  console.log(`[JUGADOR ${jugador}] colocó loseta: ${tipoActual.nombre} | meeple: ${registro.meeple}`);
+  
+  if (tipoMeeple) {
+    const meeple = document.createElement("img");
+    // 🔹 Siempre usa el mismo meeple por color de jugador
+    meeple.src = `imagenes/meeple_${color}.png`;
+    meeple.classList.add("meeple");
+    celdas[indiceActual].appendChild(meeple);
+    estadoTablero[indiceActual].meeple = {tipo: tipoMeeple, color: color};
+
+    if (tipoMeeple === "vago") puntaje[jugador-1].vagos++;
+    if (tipoMeeple === "ladron") puntaje[jugador-1].ladrones++;
+    if (tipoMeeple === "caballero") puntaje[jugador-1].caballeros++;
+    if (tipoMeeple === "paladin") puntaje[jugador-1].paladines++;
+
+    const puntos = puntosPorMeeple[tipoMeeple] || 0;
+    puntaje[jugador-1].total += puntos;
+    puntaje[jugador-1].diario += puntos;
+    puntaje[jugador-1].ultimo = puntos;
+    actualizarVariablesJugadoresPorColor();
+
+    alert(`Jugador ${jugador}: +${puntos} pts por ${tipoMeeple}. Total actual: ${puntaje[jugador-1].total} pts`);
+    console.log(`Jugador ${jugador} sumó +${puntos} pts (meeple: ${tipoMeeple}). Total: ${puntaje[jugador-1].total}`);
+  } else {
+    puntaje[jugador-1].ultimo = 0;
+    actualizarVariablesJugadoresPorColor();
+  }
+
+  registros.push(registro);
+
+  jugador++;
+  if (jugador > 4) jugador = 1;
+
+  if (jugador === 1) {
+    let resumenDia = "Fin de día - Puntos por jugador este día:\n";
+    for (let i = 0; i < 4; i++) {
+      puntajeDiarioHist[i].push(puntaje[i].diario);
+      resumenDia += `Jugador ${i+1}: ${puntaje[i].diario} pts\n`;
+      puntaje[i].diario = 0;
+    }
+    alert(resumenDia);
+    console.log(resumenDia);
+  }
+
+  document.getElementById("barra-controles").innerHTML = `
+    <button id="rotar">Rotar loseta</button>
+    <button id="confirmar">Confirmar colocación</button>`;
+  document.getElementById("rotar").onclick = () => {
+    if (!losetaActual) return;
+    rotacion += 90;
+    if (rotacion >= 360) rotacion = 0;
+    losetaActual.style.transform = `rotate(${rotacion}deg)`;
+    marcarEspaciosValidos();
+  };
+  document.getElementById("confirmar").onclick = () => {
+    if (!celdaSeleccionada) {
+      alert("Coloca la loseta en una posición válida antes de confirmar.");
+      return;
+    }
+    colocarLosetaFija(indiceActual, tipoActual, rotacion);
+    losetaActual.remove();
+    losetaActual = null;
+    celdaSeleccionada = null;
+    losetasRestantes--;
+    mostrarOpcionesMeeple();
+  };
+
+  turnoJugador();
+}
+
+function finalizarJuego() {
+  alert("¡El juego ha terminado!");
+  let resumen = "Puntajes finales:\n";
+  for (let i = 0; i < 4; i++) {
+    resumen += `Jugador ${i+1}: ${puntaje[i].total} pts\n`;
+  }
+  alert(resumen);
+  console.log(resumen);
+}
+</script>
+</body>
+</html>

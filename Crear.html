@@ -1,0 +1,70 @@
+<!-- ...existing code... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+       <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="crear">
+
+    <div class="bloque">
+        <h2>Crear Cuenta</h2>
+        <form id="crearForm" action="Crear.php" method="post">
+            <input id="nombre" type="text" name="nombre" placeholder="Nombre" required>
+            <input id="email" type="email" name="email" placeholder="Email" required>
+            <input id="password" type="password" name="password" placeholder="Contraseña" required>
+            <button type="submit">Crear Cuenta</button>
+        </form>
+    </div>    
+</div>
+
+<script>
+  // Almacén local en memoria y persistente
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+
+  const form = document.getElementById('crearForm');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    // Guardar en variables
+    const nombre = document.getElementById('nombre').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value; // tratar con cuidado
+
+    // Objeto listo para enviar o almacenar
+    const usuario = { nombre, email, password };
+
+    // Guardar en memoria global para usar después en el juego/u otra lógica
+    window.ultimoUsuario = usuario;        // variable accesible desde consola/otros scripts
+    usuarios.push(usuario);
+    localStorage.setItem('usuarios', JSON.stringify(usuarios)); // persistir localmente
+
+    // Mostrar confirmación breve
+    alert('Datos guardados en variables. Listo para enviar a la base de datos.');
+
+    // Ejemplo: enviar al servidor (descomentar y ajustar endpoint si quieres enviar ahora)
+    /*
+    fetch('Crear.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(usuario)
+    })
+    .then(r => r.text())
+    .then(resp => console.log('Respuesta servidor:', resp))
+    .catch(err => console.error('Error envío:', err));
+    */
+   alert(nombre + " " + email + " "+ " " + password);
+  });
+  
+</script>
+<footer>
+        
+        <a href="lobby.html"> <img src="imagenes/flecha.png" alt="volver" width="100px" height="100px"> </a>
+    </footer>
+</body>
+</html>
+<!-- ...existing code... -->

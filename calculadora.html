@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de Puntos Carcassonne</title>
+<style>
+  body {
+    font-family: Arial;
+    background: #f0f0f0;
+    text-align: center;
+    padding: 20px;
+  }
+  .caja {
+    background: white;
+    border: 1px solid #ccc;
+    max-width: 400px;
+    margin: auto;
+    padding: 15px;
+  }
+  input, select, button {
+    margin: 5px;
+  }
+  ul {
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+  <div class="caja">
+    <h2>Calculadora De Puntos</h2>
+    <p>Suma puntos por losetas</p>
+
+    <div>
+      <input type="text" id="nuevoJugador" placeholder="Nombre jugador">
+      <button onclick="agregarJugador()">Agregar</button>
+    </div>
+
+    <div>
+      <select id="jugador"></select>
+    </div>
+
+    <div>
+      <select id="accion">
+        <option value="camino">Camino</option>
+        <option value="ciudad">Ciudad</option>
+        <option value="monasterio">Monasterio</option>
+      </select>
+      <input type="number" id="losetas" value="1" min="1">
+      <button onclick="sumarPuntos()">Sumar</button>
+    </div>
+
+    <h3>Puntajes</h3>
+    <ul id="puntajes"></ul>
+
+    <h3>Historial</h3>
+    <ul id="historial"></ul>
+  </div>
+
+  <script>
+    let jugadores = [];
+    let historial = [];
+
+    function agregarJugador() {
+      const nombre = document.getElementById('nuevoJugador').value.trim();
+      if (!nombre) return alert('Escribe un nombre');
+      jugadores.push({ nombre, puntos: 0 });
+      document.getElementById('nuevoJugador').value = '';
+      actualizarJugadores();
+    }
+
+    function actualizarJugadores() {
+      const select = document.getElementById('jugador');
+      select.innerHTML = '';
+      jugadores.forEach((j, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = j.nombre;
+        select.appendChild(opt);
+      });
+      mostrarPuntajes();
+    }
+
+    function sumarPuntos() {
+      const jugadorIndex = document.getElementById('jugador').value;
+      if (jugadorIndex === '') return alert('Selecciona un jugador');
+      const accion = document.getElementById('accion').value;
+      const losetas = parseInt(document.getElementById('losetas').value) || 1;
+      let puntos = 0;
+
+      if (accion === 'camino') puntos = losetas * 1;
+      if (accion === 'ciudad') puntos = losetas * 2;
+      if (accion === 'monasterio') puntos = 9;
+
+      jugadores[jugadorIndex].puntos += puntos;
+      historial.push(`${jugadores[jugadorIndex].nombre} gana ${puntos} puntos por ${accion}`);
+      mostrarPuntajes();
+      mostrarHistorial();
+    }
+
+    function mostrarPuntajes() {
+      const lista = document.getElementById('puntajes');
+      lista.innerHTML = '';
+      jugadores.forEach(j => {
+        const li = document.createElement('li');
+        li.textContent = `${j.nombre}: ${j.puntos} puntos`;
+        lista.appendChild(li);
+      });
+    }
+
+    function mostrarHistorial() {
+      const lista = document.getElementById('historial');
+      lista.innerHTML = '';
+      historial.slice().reverse().forEach(h => {
+        const li = document.createElement('li');
+        li.textContent = h;
+        lista.appendChild(li);
+      });
+    }
+  </script>
+  <footer>
+        
+        <a href="lobby.html"> <img src="imagenes/flecha.png" alt="volver" width="100px" height="100px"> </a>
+    </footer>
+</body>
+</html>

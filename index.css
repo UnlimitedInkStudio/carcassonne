@@ -1,0 +1,112 @@
+body{
+    background-image: url(imagenes/cyber-3400789_1280.jpg);
+    background-size: cover;
+}
+h1{
+    text-align: center;
+    color: chartreuse;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-size: 50px;
+     text-size-adjust: 25%;
+     padding-top: 5%;
+}
+.presentacion{
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    color:#ffffff;
+    padding: 5%;
+    text-size-adjust: 75%;
+    background-color: rgb(0, 132, 155);
+    font-size: 150%;
+    margin: 2% 4%;
+     max-width: calc(100% - 8%);
+     border-radius: 12px;
+     box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+     font-size: 150%;
+     
+}
+
+button{
+    background-image: url("./imagenes/botonT1.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;        
+    display: inline-block;
+    width: 220px;                     
+    height: 80px;                     
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 0;                     
+    line-height: 0;
+    overflow: hidden;
+}
+button:hover{
+    background-image: url(imagenes/botonT2.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;        
+    display: inline-block;
+    width: 220px;                    
+    height: 80px;                     
+    margin: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 0;                     
+    line-height: 0;
+    overflow: hidden;
+    
+}
+footer h3{
+    color: rgb(0, 132, 155);
+    position: center;
+}
+.github button{
+                background-image: url("./imagenes/githublogo.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;        
+    display: inline-block;
+    width: 220px;                     
+    height: 80px;                     
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 0;                     
+    line-height: 0;
+    overflow: hidden;
+    display: inline-block;
+}
+.gmail button{
+                background-image: url("./imagenes/Gmail-Logo.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;        
+    display: inline-block;
+    width: 220px;                     
+    height: 80px;                     
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 0;                     
+    line-height: 0;
+    overflow: hidden;
+     display: inline-block;
+}
+h4{
+    color:white;
+}
