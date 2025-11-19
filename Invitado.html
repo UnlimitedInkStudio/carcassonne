@@ -22,16 +22,20 @@
     background-color: #ccc;
     border: 3px solid #333;
     margin-top: 10px;
+    z-index: 1; /* asegurar que el avatar pueda colocarse por encima */
   }
   .celda { width: 60px; height: 60px; background: #fff; border: 1px solid #aaa; position: relative; }
   .valida { animation: valid 5s infinite; }
-  .loseta { width: 60px; height: 60px; position: absolute; top: 0; left: 0; transform-origin: center center; }
+  .loseta { width: 60px; height: 60px; position: absolute; top: 0; left: 0; transform-origin: center center; touch-action: none; }
+  /* Asegurar que las losetas queden por encima de la barra de controles */
+  .loseta { z-index: 2000; }
   .meeple { width: 30px; height: 30px; position: absolute; bottom: 5px; right: 5px; }
-  #barra-controles { position: sticky; bottom: 0; background: #222; padding: 10px; width: 100%; color: white; }
+  #barra-controles { position: sticky; bottom: 0; background: #222; padding: 10px; width: 100%; color: white; z-index: 1000; }
   #barra-controles button { margin: 5px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
   #info { margin-top: 10px; font-weight: bold; }
+  /* Avatar del jugador. Pone el avatar "por encima" usando fixed y z-index alto */
   #jugador-actual {
-    position: absolute;
+    position: fixed;
     top: 10px;
     right: 10px;
     width: 120px;
@@ -39,6 +43,60 @@
     border: 3px solid #333;
     border-radius: 10px;
     background-color: #fff;
+    z-index: 99999; /* siempre por encima del tablero */
+    pointer-events: auto; /* deja activo el avatar (cambiar a 'none' si quieres que toques pasen a la cuadricula) */
+  }
+  /* Resalto mientras se arrastra con el dedo */
+  .arrastrando { outline: 3px dashed #2ecc71; }
+  
+  /* Responsive: alejamos el avatar del tablero en pantallas pequeñas */
+  @media (max-width: 600px) {
+    #jugador-actual {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      width: 84px;
+      height: 84px;
+      z-index: 99999;
+      pointer-events: none; /* que no bloquee toques en movil sobre el tablero */
+    }
+    /* Empujar el tablero para dar espacio visual */
+    #tablero {
+      margin-top: 120px;
+      width: calc(100vw - 20px);
+      height: calc(100vw - 20px);
+    }
+  }
+
+  /* Responsive: mover el avatar lejos del tablero en pantallas pequeñas */
+  @media (max-width: 600px) {
+    #jugador-actual {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      width: 84px;
+      height: 84px;
+      z-index: 1200;
+      border-radius: 12px;
+    }
+    /* Dar espacio visual y que no tape la cuadricula */
+    #tablero {
+      margin-top: 120px;
+      width: calc(100vw - 20px);
+      height: calc(100vw - 20px);
+      max-width: 900px;
+      max-height: 900px;
+    }
+  }
+
+  @media (min-width: 601px) and (max-width: 900px) {
+    #jugador-actual {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 100px;
+      height: 100px;
+    }
   }
 </style>
 </head>
@@ -96,6 +154,80 @@ const puntosPorMeeple = { vago: 3, ladron: 1, caballero: 4, paladin: 5 };
 
 let registros = [];
 
+/* ----------------------------------------
+   Soporte táctil / pointer (global)
+   - Las funciones usan la variable global losetaActual
+   - Se registran listeners cuando se crea una loseta
+-----------------------------------------*/
+let _touchActive = false;
+let _touchOffsetX = 0;
+let _touchOffsetY = 0;
+let _pointerId = null;
+
+function onPointerStart(e) {
+  if (!losetaActual) return;
+  e.preventDefault();
+  const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0].clientX);
+  const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0].clientY);
+  _touchActive = true;
+  if (e.pointerId) _pointerId = e.pointerId;
+  const rect = losetaActual.getBoundingClientRect();
+  _touchOffsetX = clientX - rect.left;
+  _touchOffsetY = clientY - rect.top;
+  losetaActual.style.position = 'absolute';
+  losetaActual.style.zIndex = 9999;
+  losetaActual.draggable = false;
+  try { if (e.pointerId) losetaActual.setPointerCapture(e.pointerId); } catch (err) {}
+}
+
+function onPointerMove(e) {
+  if (!_touchActive || !losetaActual) return;
+  e.preventDefault();
+  const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0].clientX);
+  const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0].clientY);
+  losetaActual.style.left = (clientX - _touchOffsetX) + 'px';
+  losetaActual.style.top = (clientY - _touchOffsetY) + 'px';
+  // resaltar celda sobre la que está el dedo
+  const under = document.elementFromPoint(clientX, clientY);
+  celdas.forEach(c => c.classList.remove('arrastrando'));
+  if (under && under.classList && under.classList.contains('celda')) under.classList.add('arrastrando');
+}
+
+function onPointerEnd(e) {
+  if (!_touchActive || !losetaActual) return;
+  _touchActive = false;
+  const clientX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : e.clientX;
+  const clientY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : e.clientY;
+  const under = document.elementFromPoint(clientX, clientY);
+  celdas.forEach(c => c.classList.remove('arrastrando'));
+  try { if (e.pointerId) losetaActual.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  if (under && under.classList && under.classList.contains('celda')) {
+    const index = celdas.indexOf(under);
+    // Llamar a mismo comportamiento que drop
+    colocarTemporal({ preventDefault: () => {} }, under, index);
+  } else {
+    // si no soltó sobre el tablero, devolver a la bandeja
+    losetaActual.style.left = '50%';
+    losetaActual.style.top = '90%';
+    losetaActual.style.transform = `translate(-50%, -50%) rotate(${rotacion}deg)`;
+    losetaActual.style.zIndex = '';
+    losetaActual.draggable = true;
+  }
+}
+
+function cleanupPointerListeners() {
+  try {
+    losetaActual.removeEventListener('pointerdown', onPointerStart);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerEnd);
+    losetaActual.removeEventListener('touchstart', onPointerStart);
+    window.removeEventListener('touchmove', onPointerMove);
+    window.removeEventListener('touchend', onPointerEnd);
+  } catch (e) {}
+}
+/* -------------------------------------- */
+
 for (let i = 0; i < 225; i++) {
   const celda = document.createElement("div");
   celda.classList.add("celda");
@@ -133,7 +265,11 @@ function turnoJugador() {
 }
 
 function prepararNuevaLoseta() {
-  if (losetaActual) losetaActual.remove();
+  if (losetaActual) {
+    // limpiar listeners previos si hay uno
+    try { cleanupPointerListeners(); } catch(e){};
+    losetaActual.remove();
+  }
   let random = Math.random();
   if (random < 0.07) {
     tipoActual = tiposLoseta[4];
@@ -151,9 +287,19 @@ function prepararNuevaLoseta() {
   losetaActual.style.left = "50%";
   losetaActual.style.top = "90%";
   losetaActual.style.transform = "translate(-50%, -50%) rotate(0deg)";
+  losetaActual.style.zIndex = 2000; // default z-index para que esté por encima de los botones
   losetaActual.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", "loseta"); });
+
   document.body.appendChild(losetaActual);
   rotacion = 0;
+
+  // registrar listeners para pointer/touch (soportados en móviles)
+  losetaActual.addEventListener('pointerdown', onPointerStart);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerEnd);
+  losetaActual.addEventListener('touchstart', onPointerStart, { passive: false });
+  window.addEventListener('touchmove', onPointerMove, { passive: false });
+  window.addEventListener('touchend', onPointerEnd, { passive: false });
 }
 
 function adyacentes(i) {
@@ -235,6 +381,7 @@ function colocarLosetaFija(index, tipo, rot) {
   fija.src = tipo.imagen;
   fija.classList.add("loseta");
   fija.style.transform = `rotate(${rot}deg)`;
+  fija.style.zIndex = 2000; // asegurar que la loseta colocada esté por encima de la barra
   celda.appendChild(fija);
   estadoTablero[index] = { tipo: tipo, rot };
 }
@@ -261,6 +408,9 @@ function colocarTemporal(e, celda, index) {
   losetaActual.style.transform = `rotate(${rotacion}deg)`;
   losetaActual.draggable = false;
   celda.classList.remove("valida");
+
+  // Quitar listeners de pointer (ya quedó colocada)
+  cleanupPointerListeners();
 }
 
 document.getElementById("rotar").onclick = () => {
@@ -276,6 +426,8 @@ document.getElementById("confirmar").onclick = () => {
     alert("Coloca la loseta en una posición válida antes de confirmar.");
     return;
   }
+  // limpiar listeners si quedan
+  cleanupPointerListeners();
   colocarLosetaFija(indiceActual, tipoActual, rotacion);
   losetaActual.remove();
   losetaActual = null;
@@ -372,6 +524,7 @@ function finTurno(tipoMeeple, color) {
       alert("Coloca la loseta en una posición válida antes de confirmar.");
       return;
     }
+    cleanupPointerListeners();
     colocarLosetaFija(indiceActual, tipoActual, rotacion);
     losetaActual.remove();
     losetaActual = null;
@@ -383,6 +536,20 @@ function finTurno(tipoMeeple, color) {
   turnoJugador();
 }
 
+/* Ajuste dinámico opcional de tablero según avatar (sirve si la altura del avatar varía) */
+function ajustarTableroPorAvatar() {
+  const avatar = document.getElementById('jugador-actual');
+  if (!avatar) return;
+  const rect = avatar.getBoundingClientRect();
+  if (window.innerWidth <= 600) {
+    tablero.style.marginTop = (rect.height + 24) + 'px';
+  } else {
+    tablero.style.marginTop = '10px';
+  }
+}
+window.addEventListener('load', ajustarTableroPorAvatar);
+window.addEventListener('resize', ajustarTableroPorAvatar);
+
 function finalizarJuego() {
   alert("¡El juego ha terminado!");
   let resumen = "Puntajes finales:\n";
@@ -393,10 +560,5 @@ function finalizarJuego() {
   console.log(resumen);
 }
 </script>
-  <footer>
-        <a href="lobby.html"> <img src="imagenes/flecha.png" alt="volver" width="100px" height="100px"> </a>
-    </footer>
 </body>
 </html>
-
-
