@@ -109,10 +109,14 @@ footer h3{
 }
 h4{
     color:white;
-
 }
 
 h2{
-    color:white;
+    color: white;
 }
-
+body{
+    cursor: url(imagenes/tintero1.png), auto;
+}
+button:hover{
+    cursor: url(imagenes/tintero2.png), auto;
+}
