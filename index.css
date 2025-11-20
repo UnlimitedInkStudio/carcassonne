@@ -120,3 +120,21 @@ body{
 button:hover{
     cursor: url(imagenes/tintero2.png), auto;
 }
+.redes ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.redes ul li {
+    display: inline-block;
+    padding-bottom: 2%;
+    
+}
+
+.redes ul li a {
+    color: rgb(255, 255, 255);
+    text-decoration:aqua;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
