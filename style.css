@@ -12,7 +12,7 @@
 body{
     cursor: url(imagenes/cursor.png), auto;
 }
-body :hover{
+button:hover{
     cursor: url(imagenes/cursor2.png), auto;
 }
 button{
